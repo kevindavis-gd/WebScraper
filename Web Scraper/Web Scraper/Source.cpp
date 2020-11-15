@@ -1,7 +1,14 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <stdio.h> 
+#include <stdio.h>
 #pragma comment(lib, "Ws2_32.lib")
+
+#define DEFAULT_PORT "80"
+#define DEFAULT_BUFLEN 512 
+#define ADDRESS "www.epguides.com"
+#define MESSAGE "GET /simpsons/  HTTP/1.1\r\nHost: www.epguides.com\r\n\r\n"
+
+
 int main()
 {
 	WSADATA wsaData;
@@ -14,16 +21,15 @@ int main()
 		return 1;
 	}
 
-	struct addrinfo* result = NULL,* ptr = NULL,hints;
+	struct addrinfo* result = NULL, * ptr = NULL, hints;
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-#define DEFAULT_PORT "80" 
+
 	// Resolve the server address and port 
-	iResult = getaddrinfo("www.google.com", DEFAULT_PORT, &hints,
-		&result);
+	iResult = getaddrinfo(ADDRESS, DEFAULT_PORT, &hints, &result);
 	if (iResult != 0)
 	{
 		printf("getaddrinfo failed: %d\n", iResult);
@@ -32,8 +38,7 @@ int main()
 	}
 
 	SOCKET ConnectSocket = INVALID_SOCKET;
-	// Attempt to connect to the first address returned by 
-	// the call to getaddrinfo
+	// Attempt to connect to the first address returned by the call to getaddrinfo
 	ptr = result;
 	// Create a SOCKET for connecting to server 
 	ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
@@ -53,9 +58,8 @@ int main()
 		ConnectSocket = INVALID_SOCKET;
 	}
 
-#define DEFAULT_BUFLEN 512 
 	int sendbuflen = DEFAULT_BUFLEN;
-	char sendbuf[DEFAULT_BUFLEN] = "GET\n";
+	char sendbuf[DEFAULT_BUFLEN] = MESSAGE;
 
 	// Send an initial buffer
 	iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
@@ -65,21 +69,27 @@ int main()
 		WSACleanup();
 		return 1;
 	}
-#define DEFAULT_BUFLEN 512 
-	//char* sendbuf = "this is a test";
+
 	int recvbuflen = DEFAULT_BUFLEN;
 	char recvbuf[DEFAULT_BUFLEN];
-	
+
 	// Receive data until the server closes the connection
-		do {
-			iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-			if (iResult > 0)
-				printf("Bytes received: %d\n", iResult);
-			else if (iResult == 0)
-				printf("Connection closed\n");
-			else
-				printf("recv failed: %d\n", WSAGetLastError());
-		} while (iResult > 0);
+	do {
+		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+		if (iResult > 0)
+		{
+			printf("Bytes received: %d\n", iResult);
+		}
+		else if (iResult == 0)
+		{
+			printf("Connection closed\n");
+		}
+		else
+		{
+			printf("recv failed: %d\n", WSAGetLastError());
+		}
+	} while (iResult > 0);
+	printf("%s", recvbuf);
 
 
 	// shutdown the connection for sending since no more data will be sent
