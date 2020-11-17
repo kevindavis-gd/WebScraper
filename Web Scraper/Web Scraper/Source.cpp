@@ -1,13 +1,18 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
+#include <string>
+#include <iostream>
+#include <regex>
+
 #pragma comment(lib, "Ws2_32.lib")
 
 #define DEFAULT_PORT "80"
-#define DEFAULT_BUFLEN 512 
+#define DEFAULT_BUFLEN 262144
 #define ADDRESS "www.epguides.com"
 #define MESSAGE "GET /simpsons/  HTTP/1.1\r\nHost: www.epguides.com\r\n\r\n"
 
+using namespace std;
 
 int main()
 {
@@ -73,6 +78,7 @@ int main()
 	int recvbuflen = DEFAULT_BUFLEN;
 	char recvbuf[DEFAULT_BUFLEN];
 
+	string value;
 	// Receive data until the server closes the connection
 	do {
 		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
@@ -88,9 +94,22 @@ int main()
 		{
 			printf("recv failed: %d\n", WSAGetLastError());
 		}
-	} while (iResult > 0);
-	printf("%s", recvbuf);
 
+		value += recvbuf;
+		//clear the buffer
+		//recvbuf[0] = '\0';
+	} while (iResult > 0);
+	smatch matches;
+	//selects the tags
+	//regex reg("<([a-z-]+)\s?[a-z=\"\s?]*\\/?>(\\n?.*\\n?<\/\\1>)?");
+	regex reg("<a.*>(.*)</a>");
+
+	
+	while (regex_search(value, matches, reg))
+	{
+		cout << matches.str(1) << endl;;
+		value = matches.suffix().str();
+	}
 
 	// shutdown the connection for sending since no more data will be sent
 	// the client can still use the ConnectSocket for receiving data
