@@ -84,7 +84,7 @@ int main()
 		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
 		if (iResult > 0)
 		{
-			printf("Bytes received: %d\n", iResult);
+			//printf("Bytes received: %d\n", iResult);
 		}
 		else if (iResult == 0)
 		{
@@ -95,16 +95,14 @@ int main()
 			printf("recv failed: %d\n", WSAGetLastError());
 		}
 
-		value += recvbuf;
-		//clear the buffer
-		//recvbuf[0] = '\0';
+		value += recvbuf;;
 	} while (iResult > 0);
 	smatch matches;
-	//selects the tags
-	//regex reg("<([a-z-]+)\s?[a-z=\"\s?]*\\/?>(\\n?.*\\n?<\/\\1>)?");
-	regex reg("<a.*>(.*)</a>");
+	//regex reg("<a.*>(.*)</a>");
+	//only print the title of the page
+	regex reg("<title.*>(.*)</title>");
 
-	
+
 	while (regex_search(value, matches, reg))
 	{
 		cout << matches.str(1) << endl;;
